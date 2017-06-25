@@ -71,17 +71,25 @@ public class Klondike {
             this.suit = suit;
             this.number = number;
         }
+
+        public boolean canBeStackedOnto(Card other) {
+
+            if (other == null) return number == 13; // Stack onto empty pile
+
+            return number == other.number + 1
+                    && (suit + other.suit) % 2 == 1; // Suit color is different
+        }
     }
 
     public static class Move {
 
         public enum Type {
 
-            DECK_TO_FOUND,
-            PILE_TO_FOUND,
+            DECK_TO_FOUN,
+            PILE_TO_FOUN,
             DECK_TO_PILE,
             PILE_TO_PILE,
-            FOUND_TO_PILE
+            FOUN_TO_PILE
         }
 
         public Type type;
@@ -111,21 +119,16 @@ public class Klondike {
 
     public Klondike(Random random) {
 
+        // Init foundations
         foundations = new int[SUITS];
-        initDeck();
-        initPilesFromDeck(random);
-    }
 
-    private void initDeck() {
-
+        // Init deck
         deck = new ArrayList<>(CARDS);
         for (int i = 0; i < SUITS; i++)
             for (int j = 0; j < CARDS_PER_SUIT; j++)
                 deck.add(new Card(i, j + 1));
-    }
 
-    private void initPilesFromDeck(Random random) {
-
+        // Init piles
         piles = new Pile[PILES];
 
         for (int i = 0; i < piles.length; i++) {
@@ -144,12 +147,12 @@ public class Klondike {
 
         Move.Type type = move.type;
 
-        if (Move.Type.DECK_TO_FOUND.equals(type)) {
+        if (Move.Type.DECK_TO_FOUN.equals(type)) {
 
             deck.remove(move.from);
             foundations[move.to]++;
         }
-        else if (Move.Type.PILE_TO_FOUND.equals(type)) {
+        else if (Move.Type.PILE_TO_FOUN.equals(type)) {
 
             Pile from = piles[move.from];
             from.cards.remove(0);
@@ -172,7 +175,7 @@ public class Klondike {
             else from.visible -= cards;
             to.visible += cards;
         }
-        else if (Move.Type.FOUND_TO_PILE.equals(type)) {
+        else if (Move.Type.FOUN_TO_PILE.equals(type)) {
 
             piles[move.to].cards.add(0, new Card(move.to, foundations[move.from]--));
             piles[move.to].visible++;
@@ -184,11 +187,11 @@ public class Klondike {
 
         Move.Type type = move.type;
 
-        if (Move.Type.DECK_TO_FOUND.equals(type)) {
+        if (Move.Type.DECK_TO_FOUN.equals(type)) {
 
             deck.add(move.from, new Card(move.to, foundations[move.to]--));
         }
-        else if (Move.Type.PILE_TO_FOUND.equals(type)) {
+        else if (Move.Type.PILE_TO_FOUN.equals(type)) {
 
             piles[move.from].cards.add(0, new Card(move.to, foundations[move.to]--));
             if (!move.reveal) piles[move.from].visible++;
@@ -209,11 +212,87 @@ public class Klondike {
             from.visible += cards;
             if (move.reveal) from.visible--;
         }
-        else if (Move.Type.FOUND_TO_PILE.equals(type)) {
+        else if (Move.Type.FOUN_TO_PILE.equals(type)) {
 
             piles[move.to].cards.remove(0);
             piles[move.to].visible--;
             foundations[move.from]++;
         }
+    }
+
+    public List<Move> getLegalMoves() {
+
+        List<Move> moves = new ArrayList<>();
+
+        // DECK_TO_FOUN
+
+        for (int i = 0; i < deck.size(); i++) {
+
+            Card card = deck.get(i);
+            if (foundations[card.suit] == card.number - 1)
+                moves.add(new Move(Move.Type.DECK_TO_FOUN, i, card.suit, 1, false));
+        }
+
+        // PILE_TO_FOUN
+
+        for (int i = 0; i < piles.length; i++) {
+
+            Pile pile = piles[i];
+
+            if (!pile.cards.isEmpty()) {
+
+                Card card = pile.cards.get(0);
+                if (foundations[card.suit] == card.number - 1)
+                    moves.add(new Move(Move.Type.PILE_TO_FOUN, i, card.suit, 1, pile.visible == 1));
+            }
+        }
+
+        // DECK_TO_PILE
+
+        for (int i = 0; i < deck.size(); i++) {
+
+            for (int j = 0; j < piles.length; j++) {
+
+                Card card = deck.get(i);
+                Pile pile = piles[j];
+
+                if (card.canBeStackedOnto(pile.cards.isEmpty() ? null : pile.cards.get(0)))
+                    moves.add(new Move(Move.Type.DECK_TO_PILE, i, j, 1, false));
+            }
+        }
+
+        // PILE_TO_PILE
+
+        for (int i = 0; i < piles.length; i++) {
+
+            for (int j = 0; j < piles.length; j++) {
+
+                if (i != j) {
+
+                    Pile from = piles[i];
+                    Pile to = piles[j];
+
+                    for (int k = 0; k < from.visible; k++)
+                        if (from.cards.get(k).canBeStackedOnto(to.cards.isEmpty() ? null : to.cards.get(0)))
+                            moves.add(new Move(Move.Type.PILE_TO_PILE, i, j, k + 1, from.visible == k + 1));
+                }
+            }
+        }
+
+        // FOUN_TO_PILE
+
+        for (int i = 0; i < foundations.length; i++) {
+
+            for (int j = 0; j < piles.length; j++) {
+
+                Card card = new Card(i, foundations[i]);
+                Pile pile = piles[j];
+
+                if (card.canBeStackedOnto(pile.cards.isEmpty() ? null : pile.cards.get(0)))
+                    moves.add(new Move(Move.Type.FOUN_TO_PILE, i, j, 1, false));
+            }
+        }
+
+        return moves;
     }
 }
