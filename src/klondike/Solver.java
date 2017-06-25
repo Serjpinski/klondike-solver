@@ -2,10 +2,10 @@ package klondike;
 
 import java.util.Random;
 
-public class KlondikeSolver {
+public class Solver {
 
     public static void main(String[] args) {
 
-        Board board = new Board(new Random());
+        Klondike klondike = new Klondike(new Random());
     }
 }
