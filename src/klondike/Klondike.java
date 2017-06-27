@@ -74,7 +74,7 @@ public class Klondike {
 
         public boolean canBeStackedOnto(Card other) {
 
-            if (other == null) return number == 13; // Stack onto empty pile
+            if (other == null) return number == CARDS_PER_SUIT; // Stack onto empty pile
 
             return number == other.number + 1
                     && (suit + other.suit) % 2 == 1; // Suit color is different
@@ -105,6 +105,39 @@ public class Klondike {
             this.to = to;
             this.cards = cards;
             this.reveal = reveal;
+        }
+
+        public boolean equals(Object o) {
+
+            if (o == null || !(o instanceof Move)) return false;
+            Move other = (Move) o;
+            return this.type.equals(other.type)
+                    && from == other.from && to == other.to
+                    && cards == other.cards && reveal == other.reveal;
+        }
+
+        public int hashCode() {
+
+            return Objects.hash(type, from, to, cards, reveal);
+        }
+
+        public String toString() {
+
+            String t1 = "";
+            String t2 = "";
+
+            switch (type) {
+
+                case DECK_TO_FOUN: t1 = "d"; t2 = "f"; break;
+                case PILE_TO_FOUN: t1 = "p"; t2 = "f"; break;
+                case DECK_TO_PILE: t1 = "d"; t2 = "p"; break;
+                case PILE_TO_PILE: t1 = "p"; t2 = "p"; break;
+                case FOUN_TO_PILE: t1 = "f"; t2 = "p"; break;
+            }
+
+            return t1 + from + t2 + to
+                    + (type == Type.PILE_TO_PILE ? "=" + cards : "")
+                    + (reveal ? "!" : "");
         }
     }
 
@@ -177,7 +210,7 @@ public class Klondike {
         }
         else if (Move.Type.FOUN_TO_PILE.equals(type)) {
 
-            piles[move.to].cards.add(0, new Card(move.to, foundations[move.from]--));
+            piles[move.to].cards.add(0, new Card(move.from, foundations[move.from]--));
             piles[move.to].visible++;
         }
     }
@@ -208,7 +241,6 @@ public class Klondike {
             int cards = move.cards;
             for (int i = 0; i < cards; i++) from.cards.add(0, to.cards.remove(cards - i - 1));
             to.visible -= cards;
-            if (from.visible == 0 && !from.cards.isEmpty()) from.visible = 1;
             from.visible += cards;
             if (move.reveal) from.visible--;
         }
@@ -243,7 +275,8 @@ public class Klondike {
 
                 Card card = pile.cards.get(0);
                 if (foundations[card.suit] == card.number - 1)
-                    moves.add(new Move(Move.Type.PILE_TO_FOUN, i, card.suit, 1, pile.visible == 1));
+                    moves.add(new Move(Move.Type.PILE_TO_FOUN, i, card.suit, 1,
+                            pile.visible == 1 && pile.cards.size() > 1));
             }
         }
 
@@ -272,9 +305,10 @@ public class Klondike {
                     Pile from = piles[i];
                     Pile to = piles[j];
 
-                    for (int k = 0; k < from.visible; k++)
-                        if (from.cards.get(k).canBeStackedOnto(to.cards.isEmpty() ? null : to.cards.get(0)))
-                            moves.add(new Move(Move.Type.PILE_TO_PILE, i, j, k + 1, from.visible == k + 1));
+                    for (int k = 1; k <= from.visible; k++)
+                        if (from.cards.get(k - 1).canBeStackedOnto(to.cards.isEmpty() ? null : to.cards.get(0)))
+                            moves.add(new Move(Move.Type.PILE_TO_PILE, i, j, k,
+                                    from.visible == k && from.cards.size() > k));
                 }
             }
         }
@@ -283,9 +317,9 @@ public class Klondike {
 
         for (int i = 0; i < foundations.length; i++) {
 
-            for (int j = 0; j < piles.length; j++) {
+            Card card = new Card(i, foundations[i]);
 
-                Card card = new Card(i, foundations[i]);
+            for (int j = 0; j < piles.length; j++) {
                 Pile pile = piles[j];
 
                 if (card.canBeStackedOnto(pile.cards.isEmpty() ? null : pile.cards.get(0)))
@@ -294,5 +328,13 @@ public class Klondike {
         }
 
         return moves;
+    }
+
+    public boolean isWon() {
+
+        for (int foundation : foundations)
+            if (foundation != CARDS_PER_SUIT) return false;
+
+        return true;
     }
 }
