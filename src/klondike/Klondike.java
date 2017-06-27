@@ -35,6 +35,14 @@ public class Klondike {
             cards = new ArrayList<>();
             visible = 0;
         }
+
+        public Pile(Pile copy) {
+
+            cards = new ArrayList<>(copy.cards.size());
+            for (Card card: copy.cards) cards.add(new Card(card));
+
+            visible = copy.visible;
+        }
     }
 
     public static class Card {
@@ -70,6 +78,12 @@ public class Klondike {
 
             this.suit = suit;
             this.number = number;
+        }
+
+        public Card(Card copy) {
+
+            suit = copy.suit;
+            number = copy.number;
         }
 
         public boolean canBeStackedOnto(Card other) {
@@ -150,6 +164,11 @@ public class Klondike {
                 && this.deck.equals(other.deck);
     }
 
+    public int hashCode() {
+
+        return Objects.hash(foundations, piles, deck);
+    }
+
     public Klondike(Random random) {
 
         // Init foundations
@@ -173,6 +192,18 @@ public class Klondike {
 
             piles[i].visible = 1;
         }
+    }
+
+    public Klondike(Klondike copy) {
+
+        foundations = new int[copy.foundations.length];
+        System.arraycopy(copy.foundations, 0, foundations, 0, foundations.length);
+
+        piles = new Pile[copy.piles.length];
+        for (int i = 0; i < piles.length; i++) piles[i] = new Pile(copy.piles[i]);
+
+        deck = new ArrayList<>(copy.deck.size());
+        for (Card card: copy.deck) deck.add(new Card(card));
     }
 
     // Assumes move is legal
