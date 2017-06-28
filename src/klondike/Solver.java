@@ -15,10 +15,19 @@ public class Solver {
     private static boolean playOneGame(List<Klondike.Move> pv) {
 
         Klondike klondike = new Klondike();
-        return nextTurn(klondike, pv, new HashSet<>());
+        return nextTurn(klondike, pv, new LinkedHashSet<>());
     }
 
     private static boolean nextTurn(Klondike klondike, List<Klondike.Move> pv, Set<Klondike> states) {
+
+        if (pv.size() > 1) {
+
+            Klondike.Move a = pv.get(pv.size() - 1);
+            Klondike.Move b = pv.get(pv.size() - 2);
+            if (a.type == b.type && a.cards == b.cards && !a.reveal && !b.reveal && a.from == b.to && a.to == b.from) {
+                System.out.println("LOOP WARNING");
+            }
+        }
 
         if (pv.size() < 20) System.out.println("(" + LocalDateTime.now() + ") depth " + pv.size() + " " + pv);
 

@@ -360,13 +360,16 @@ public class Klondike {
 
         for (int i = 0; i < foundations.length; i++) {
 
-            Card card = new Card(i, foundations[i]);
+            if (foundations[i] > 0) {
 
-            for (int j = 0; j < piles.length; j++) {
-                Pile pile = piles[j];
+                Card card = new Card(i, foundations[i]);
 
-                if (card.canBeStackedOnto(pile.cards.isEmpty() ? null : pile.cards.get(0)))
-                    moves.add(new Move(Move.Type.FOUN_TO_PILE, i, j, 1, false));
+                for (int j = 0; j < piles.length; j++) {
+                    Pile pile = piles[j];
+
+                    if (card.canBeStackedOnto(pile.cards.isEmpty() ? null : pile.cards.get(0)))
+                        moves.add(new Move(Move.Type.FOUN_TO_PILE, i, j, 1, false));
+                }
             }
         }
 
