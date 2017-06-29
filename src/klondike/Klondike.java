@@ -163,6 +163,14 @@ public class Klondike {
                     + (type == Type.PILE_TO_PILE ? "=" + cards : "")
                     + (reveal ? "!" : "");
         }
+
+        public boolean isReverse(Move other) {
+
+            return ((type == Klondike.Move.Type.PILE_TO_PILE && other.type == Klondike.Move.Type.PILE_TO_PILE) ||
+                    (type == Klondike.Move.Type.FOUN_TO_PILE && other.type == Klondike.Move.Type.PILE_TO_FOUN) ||
+                    (type == Klondike.Move.Type.PILE_TO_FOUN && other.type == Klondike.Move.Type.FOUN_TO_PILE))
+                    && cards == other.cards && !reveal && !other.reveal && from == other.to && to == other.from;
+        }
     }
 
     public boolean equals(Object o) {
@@ -284,7 +292,7 @@ public class Klondike {
         }
         else if (Move.Type.DECK_TO_PILE.equals(type)) {
 
-            deck.add(move.from, piles[move.to].cards.get(0));
+            deck.add(move.from, piles[move.to].cards.remove(0));
             piles[move.to].visible--;
         }
         else if (Move.Type.FOUN_TO_PILE.equals(type)) {
