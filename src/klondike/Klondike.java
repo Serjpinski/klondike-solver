@@ -171,6 +171,11 @@ public class Klondike {
                     (type == Klondike.Move.Type.PILE_TO_FOUN && other.type == Klondike.Move.Type.FOUN_TO_PILE))
                     && cards == other.cards && !reveal && !other.reveal && from == other.to && to == other.from;
         }
+
+        public boolean isReversible() {
+
+            return !reveal && (type == Type.PILE_TO_PILE || type == Type.PILE_TO_FOUN || type == Type.FOUN_TO_PILE);
+        }
     }
 
     public boolean equals(Object o) {

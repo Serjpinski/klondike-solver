@@ -5,30 +5,50 @@ import java.util.*;
 
 public class Solver {
 
+    private static boolean REVERSIBLE_PRUNING = true;
+
     public static void main(String[] args) throws InterruptedException {
 
-        final Stack<Klondike.Move> pv = new Stack<>();
-        playOneGame(pv);
-        System.out.println(pv);
-        Thread.sleep(1);
+        try {
+
+            Klondike game1 = new Klondike();
+            Klondike game2 = new Klondike(game1);
+
+            REVERSIBLE_PRUNING = true;
+            Stack<Klondike.Move> pv1 = solveGame(game1);
+            System.out.println(pv1);
+            System.out.println();
+            Thread.sleep(3000);
+
+            REVERSIBLE_PRUNING = false;
+            Stack<Klondike.Move> pv2 = solveGame(game2);
+            System.out.println(pv2);
+            System.out.println();
+            Thread.sleep(1);
+        }
+        catch (Exception e) {
+
+            e.printStackTrace();
+        }
     }
 
-    private static boolean playOneGame(Stack<Klondike.Move> pv) {
+    private static Stack<Klondike.Move> solveGame(Klondike klondike) {
 
-        Klondike klondike = new Klondike();
-        return nextTurn(klondike, pv, new LinkedHashSet<>());
+        Stack<Klondike.Move> pv = new Stack<>();
+        nextTurn(klondike, pv, new LinkedHashSet<>());
+        return pv;
     }
 
     private static boolean nextTurn(Klondike klondike, Stack<Klondike.Move> pv, Set<Klondike> states) {
 
-        if (pv.size() > 1) {
-
-            Klondike.Move a = pv.get(pv.size() - 1);
-            Klondike.Move b = pv.get(pv.size() - 2);
-            if (a.isReverse(b)) {
-                System.out.println("LOOP WARNING");
-            }
-        }
+//        if (pv.size() > 1) {
+//
+//            Klondike.Move a = pv.get(pv.size() - 1);
+//            Klondike.Move b = pv.get(pv.size() - 2);
+//            if (a.isReverse(b)) {
+//                System.out.println("LOOP WARNING");
+//            }
+//        }
 
         if (pv.size() < 20) System.out.println(LocalDateTime.now() + " depth " + pv.size() + " " + pv);
 
@@ -43,16 +63,24 @@ public class Solver {
             pv.push(move);
             klondike.doMove(move);
 
-            if (klondike.isWon() ||
-                    (!states.contains(klondike) && nextTurn(klondike, pv, states)))
-                return true;
+            if (klondike.isWon()) return true;
+
+            boolean loop = states.contains(klondike);
+
+            if (!loop && nextTurn(klondike, pv, states)) return true;
 
             klondike.undoMove(move);
             pv.pop();
 
-            if (!klondike.equals(state)) {
-                System.out.println("BAD STATE WARNING");
+            if (REVERSIBLE_PRUNING && loop && move.isReversible()) {
+
+                states.remove(state);
+                return false;
             }
+
+//            if (!klondike.equals(state)) {
+//                System.out.println("BAD STATE WARNING");
+//            }
         }
 
         states.remove(state);
