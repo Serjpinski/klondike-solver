@@ -177,7 +177,7 @@ public class Klondike {
             return !reveal && (type == Type.PILE_TO_PILE || type == Type.PILE_TO_FOUN || type == Type.FOUN_TO_PILE);
         }
 
-        public int movePriority() {
+        public int priority() {
 
             switch (type) {
 

@@ -25,7 +25,7 @@ public class Solver {
         System.out.println(LocalDateTime.now() + " depth " + pv.size() + " " + pv);
 
         List<Klondike.Move> moves = klondike.getLegalMoves();
-        moves.sort(Comparator.comparingInt(Klondike.Move::movePriority).reversed());
+        moves.sort(Comparator.comparingInt(Klondike.Move::priority).reversed());
         if (moves.isEmpty()) return false;
 
         Klondike state = new Klondike(klondike);
