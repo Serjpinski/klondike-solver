@@ -176,6 +176,24 @@ public class Klondike {
 
             return !reveal && (type == Type.PILE_TO_PILE || type == Type.PILE_TO_FOUN || type == Type.FOUN_TO_PILE);
         }
+
+        public int movePriority() {
+
+            switch (type) {
+
+                case DECK_TO_FOUN:
+                case PILE_TO_FOUN:
+                    return reveal ? 3 : 1;
+                case PILE_TO_PILE:
+                    return reveal ? 2 : 0;
+                case DECK_TO_PILE:
+                    return 1;
+                case FOUN_TO_PILE:
+                    return 0;
+            }
+
+            return 0;
+        }
     }
 
     public boolean equals(Object o) {
